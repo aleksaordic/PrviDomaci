@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"              
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"> <!-- implementiramo bootstrap  -->
+    <title>Ispiti</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Studentska sluzba</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="index.html">Početna</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="studenti.html">Studenti</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="ispiti.html">Ispiti</a>
+                </li>
+
+            </ul>
+        </div>
+    </nav>
+    <div>
+        <table class="table table-hover table-dark">
+            <tr>
+                <th scope="col">Rb</th>
+                <th scope="col">Naziv</th>
+                <th scope="col">Semestar</th>
+            </tr>
+            <tbody id="ispiti_podaci">
+
+
+            </tbody>
+
+        </table>
+
+
+    </div>
+    <div class="formaZaDodavanje">
+        <h1>Kreiraj ispit</h1>
+        <form class="mt-5">
+            <div class="form-group">
+                <input type="text" class="form-control" id="naziv" placeholder="Naziv" required>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" id="semestar" placeholder="Semestar" required>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" id="krerajIspit">Sacuvaj</button>
+            </div>
+        </form>
+    </div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> <!-- implementiramo ajax  -->
+   
+    <!-- JavaScript kod -->
+   <script> 
+        $(document).ready(function () {                         //Kada se ucitao sav HTML onda radi funkciju
+            napuniTabelu();
+            $("#krerajIspit").click(function (e) {              // PRIMENA AJAXA 
+                e.preventDefault();                             // npr. nece se refreshovati stranica (tj. nece se poslati get zahtev koji se salje po default-u preko html-a)
+                $.post("./server/ispitServis.php", {
+                    metoda: "dodaj",
+                    naziv: $("#naziv").val(),                   // .val() izvlaci sta pise u inputu sa id="naziv"
+                    semestar: $("#semestar").val()
+                }, function (data) {
+                    if (data != 'ok')
+                        alert(data);
+                    napuniTabelu();                             // refresh tabele
+
+                })
+            })
+        });
+
+        function napuniTabelu() {
+            $.getJSON("./server/ispitServis.php", { metoda: "vrati sve" }, function (data) {        // PRIMENA AJAXA (kad server vrati odgovor od "./ispitServis.php", tad izvrsi f-ju)
+                                                                                                    // "data" je objekat koji ce server vratiti
+                if (data.status !== "ok") {
+                    alert(data.error);
+                    return;
+                }
+                let i = 0;                                                                          // #ispiti_podaci (jQUERY)=> uzmi HTML element sa id ="ispiti_podaci"  (# je ID)
+                $("#ispiti_podaci").html("");                                                       // append() pravi novi red u tabeli 
+                for (let ispit of data.data) {
+                    $("#ispiti_podaci").append(`<tr>                                            
+                        <th scope="row">${++i}.</th>
+                    <td contentEditable=true id="${ispit.id}Naziv" >${ispit.naziv} </td>
+                    <td contentEditable=true id="${ispit.id}Semestar" >${ispit.semestar} </td>
+                    <td>
+                        <button class='btn btn-success' onClick="izmeniIspit(${ispit.id})">Izmeni</button>
+                        <button class='btn btn-danger' onClick="obrisiIspit(${ispit.id})" >Obrisi</button>
+                    </td>
+                </tr>`);
+                }
+            });
+
+        }
+
+        function obrisiIspit(id) {
+            $.post("./server/ispitServis.php", { metoda: "obrisi", id: id }, function (data) {
+                if (data != 'ok')
+                    alert(data);
+                napuniTabelu();                 // refresh
+            })
+        }
+
+        function izmeniIspit(id) {
+            let naziv = $(`#${id}Naziv`).text();
+            let semestar = $(`#${id}Semestar`).text();
+
+            $.post("./server/ispitServis.php", {
+                metoda: "izmeni",
+                id: id,
+                naziv: naziv,
+                semestar: semestar
+            }, function (data) {
+                if (data != 'ok')
+                    alert(data);
+                napuniTabelu();                 // refresh
+            })
+        }
+    </script>
+</body>
+
+</html>

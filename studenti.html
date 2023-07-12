@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+
+    <title>Studenti</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Studentska sluzba</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="index.html">Početna</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="studenti.html">Studenti</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="ispiti.html">Ispiti</a>
+                </li>
+
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-5">
+            <label id="izabraniStudent" hidden=true></label>
+            <table class="table table-hover table-dark">
+                <tr>
+                    <th scope="col">rb</th>
+                    <th scope="col">Ime</th>
+                    <th scope="col">Prezime</th>
+                    <th scope="col">Broj indeksa</th>
+                </tr>
+                <tbody id="studenti">
+                                            <!-- ovde je tabela prazna jer je punimo u AJAXU  -->                            
+                </tbody>       
+
+            </table> 
+        </div>
+        <div class="col-3" hidden="true" id='polaganjaWrapper'>
+
+            <table class="table table-dark">
+                <tr>
+                    <th scope="col">Rb</th>
+                    <th scope="col">Ispit</th>
+                    <th scope="col">ocena</th>
+                </tr>
+                <tbody id="polaganjaBody"></tbody>
+            </table>
+            <div>
+                <form class="mt-5">
+                    <select id="komboSaPolaganjima" class="form-control"></select>
+                    <input class="form-control" type="number" id="ocena" placeholder="ocena..." required min="6"
+                        max="10" />
+                    <button class="form-control btn btn-dark" id="dodajVezu">Dodaj polaganje</button>
+                </form>
+            </div>
+        </div>
+        <div class="formaZaDodavanje">
+            <h1 id="1010">Kreiraj studenta</h1>
+            <form class="mt-5">
+                <div class="form-group">
+                    <input type="text" class="form-control" id="imeStudenta" placeholder="ime..." required>
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-control" id="prezimeStudenta" placeholder="prezime..." required>
+                </div>
+                <div class="form-group">
+                    <input type="text" title="Unesite broj indeksa u formatu godina/broj" class="form-control"
+                        id="brojIndeksa" placeholder="xxxx/yyyy..." required>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" id="kreirajStudenta">Sacuvaj</button>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            napuniStudente();
+            $("#kreirajStudenta").click(function (e) {
+                e.preventDefault();
+                $.post("./server/studentServis.php", {
+                    metoda: "dodaj",
+                    ime: $("#imeStudenta").val(),               // .val() izvlaci sta pise u inputu sa id="imeStudenta"
+                    indeks: $("#brojIndeksa").val(),
+                    prezime: $("#prezimeStudenta").val()
+                }, function (data) {
+                    if (data !== "ok") {
+                        alert(data || 'greska');
+                    }
+                    napuniStudente();                           // refresh
+                })
+            })
+            $("#dodajVezu").click(dodajVezuKlik);
+        });
+
+        function napuniStudente() {
+            $.getJSON("./server/studentServis.php", { metoda: "vratiSve" }, function (data) {
+                console.log(data);
+                if (data.status !== "ok") {
+                    alert(data.error);
+                    return;
+                }
+                $("#studenti").html("");                // ovom studentu isprazni HTML
+                let i = 0;                              // --- append() pravi novi red u tabeli ---
+                for (let student of data.data) {        // prodji kroz sve studente koje si dobio u nizu "data.data" i za svaku dodaj jedan red ovih studenata
+                    $("#studenti").append(`<tr class ="color-row1">         
+                        <th>${++i}</th>
+                        <td contentEditable=true id="${student.id}ime">${student.ime}</td>
+                        <td contentEditable=true id="${student.id}prezime" >${student.prezime}</td>
+                        <td contentEditable=true id="${student.id}indeks" >${student.indeks}</td>
+                        <td>
+                            <button class='btn btn-primary' onClick="prikaziPolaganja(${student.id})">Polaganja</button>
+                            <button class='btn btn-success' onClick="izmeniStudenta(${student.id})">Izmeni</button>
+                            <button class='btn btn-danger' onClick="obrisiStudenta(${student.id})">Obrisi</button>
+                        </td>
+                    </tr>`)
+                }
+
+            })
+        }
+
+        function izmeniStudenta(id) {
+            let ime = $(`#${id}ime`).text();
+            let prezime = $(`#${id}prezime`).text();
+            let indeks = $(`#${id}indeks`).text();
+            $.post("./server/studentServis.php", {
+                metoda: "izmeni",
+                id: id,
+                ime: ime,
+                indeks: indeks,
+                prezime: prezime
+            }, function (data) {
+                if (data !== "ok") {
+                    alert(data || 'greska');
+                }
+                napuniStudente();                 // refresh
+            })
+        }
+
+        function obrisiStudenta(id) {
+            $.post("./server/studentServis.php", { metoda: "obrisi", id: id }, function (data) {
+                if (data !== "ok") {
+                    alert(data || 'greska');
+                }
+
+                $("#polaganjaWrapper").attr("hidden", true);
+                napuniStudente();                 // refresh
+            })
+        }
+
+        function prikaziPolaganja(id) {
+            $.getJSON("./server/ispitServis.php", { metoda: "vrati od studenta", student: id }, function (data) {
+                console.log(data)
+                if (data.status !== "ok") {
+                    alert(data.error);
+                    return;
+                }
+
+                let i = 0;
+
+                $("#polaganjaWrapper").attr("hidden", false);
+                $("#polaganjaBody").html("");
+                for (let polaganje of data.data) {
+                    $("#polaganjaBody").append(`
+                        <tr>
+                            <td>${++i}.</td>
+                            <td>${polaganje.naziv}</td>
+                            <td>${polaganje.ocena}</td>
+                            <td>
+                                <button class='btn btn-danger' onClick="obrisiVezu(${id},${polaganje.id})"> Obrisi</button> 
+                            </td>
+                        </tr>
+                    `);
+                }
+                $("#izabraniStudent").val(id);
+                napunikomboSaPolaganjima();                 // refresh
+
+            })
+        }
+
+        function napunikomboSaPolaganjima() {
+            $.getJSON("./server/ispitServis.php", { metoda: "vrati sve" }, function (data) { // PRIMENA AJAXA (kad server vrati odgovor od "./ispitServis.php", tad izvrsi f-ju)
+                console.log(data);
+                if (data.status !== "ok") {
+                    alert(data.error);
+                    return;
+                }
+
+                $("#komboSaPolaganjima").html("");
+                for (let polaganje of data.data) {
+                    $("#komboSaPolaganjima").append(`<option value ="${polaganje.id}" >${polaganje.naziv}</option>`);
+                }
+            })
+        }
+
+        function dodajVezuKlik(e) {
+            e.preventDefault();
+            $.post("./server/studentServis.php", {
+                metoda: "dodajVezu",
+                student: $("#izabraniStudent").val(),
+                ispit: $("#komboSaPolaganjima").val(),
+                ocena: $("#ocena").val()
+            }, function (data) {                                    // posto je ovde $.post --> ovo (data) ce biti string
+                if (data !== "ok") {
+                    alert(data || 'greska');
+                }
+                prikaziPolaganja($("#izabraniStudent").val());                 // refresh
+            })
+        }
+        function obrisiVezu(student, ispit) {
+            $.post("./server/studentServis.php", {
+                metoda: "obrisiVezu",
+                student: student,
+                ispit: ispit
+            }, function (data) {
+                if (data !== "ok") {
+                    alert(data || 'greska');
+                }
+                prikaziPolaganja($("#izabraniStudent").val());                 // refresh
+            })
+        }
+    </script>
+</body>
+
+</html>
