@@ -143,3 +143,87 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+/*<?php
+
+class Ispit {
+    private $id;
+    private $naziv;
+    private $semestar;
+
+    public function __construct($id, $naziv, $semestar) {
+        $this->id = $id;
+        $this->naziv = $naziv;
+        $this->semestar = $semestar;
+    }
+
+    public function getId() {
+        return $this->id;
+    }
+
+    public function getNaziv() {
+        return $this->naziv;
+    }
+
+    public function getSemestar() {
+        return $this->semestar;
+    }
+}
+
+class Polaganje {
+    private $ispit;
+    private $student;
+    private $ocena;
+
+    public function __construct($ispit, $student, $ocena) {
+        $this->ispit = $ispit;
+        $this->student = $student;
+        $this->ocena = $ocena;
+    }
+
+    public function getIspit() {
+        return $this->ispit;
+    }
+
+    public function getStudent() {
+        return $this->student;
+    }
+
+    public function getOcena() {
+        return $this->ocena;
+    }
+}
+
+class Student {
+    private $id;
+    private $ime;
+    private $prezime;
+    private $indeks;
+
+    public function __construct($id, $ime, $prezime, $indeks) {
+        $this->id = $id;
+        $this->ime = $ime;
+        $this->prezime = $prezime;
+        $this->indeks = $indeks;
+    }
+
+    public function getId() {
+        return $this->id;
+    }
+
+    public function getIme() {
+        return $this->ime;
+    }
+
+    public function getPrezime() {
+        return $this->prezime;
+    }
+
+    public function getIndeks() {
+        return $this->indeks;
+    }
+}
+
+?>
+*/
